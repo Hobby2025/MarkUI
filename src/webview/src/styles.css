@@ -1,0 +1,473 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #faf9f5;
+  color: #141413;
+  --canvas: #faf9f5;
+  --surface-soft: #f4f4f4;
+  --surface-card: #ffffff;
+  --surface-dark: #181715;
+  --surface-dark-soft: #1f1e1b;
+  --hairline: #e0e0e0;
+  --hairline-soft: #eeeeee;
+  --primary: #0f62fe;
+  --primary-active: #0043ce;
+  --ink: #141413;
+  --body: #3d3d3a;
+  --body-strong: #252523;
+  --muted: #6c6a64;
+  --muted-soft: #8e8b82;
+  --on-dark: #faf9f5;
+  --on-dark-soft: #a09d96;
+  --header-height: 64px;
+  --outline-gap: 32px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 360px;
+  background: #f4f4f4;
+  color: var(--ink);
+}
+
+button,
+a {
+  font-family: inherit;
+}
+
+.markui-document-shell {
+  min-height: 100vh;
+  padding-top: var(--header-height);
+}
+
+.cds--header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  height: var(--header-height);
+  border-bottom: 1px solid var(--hairline);
+  background: rgba(244, 244, 244, 0.94);
+  backdrop-filter: blur(16px);
+}
+
+.cds--header__name {
+  display: inline-flex;
+  align-items: center;
+  height: var(--header-height);
+  padding: 0 clamp(20px, 4vw, 48px);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.cds--header__name--prefix {
+  position: relative;
+  margin-right: 10px;
+  color: var(--primary-active);
+  font-weight: 700;
+}
+
+.cds--tile {
+  display: block;
+  min-width: 0;
+}
+
+.document-page {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+  padding: 96px clamp(20px, 4vw, 48px);
+}
+
+.document-title-band {
+  display: grid;
+  max-width: 1080px;
+  gap: 14px;
+  margin: 0 auto 64px;
+}
+
+.document-title-band p {
+  margin: 0;
+  color: var(--primary-active);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.document-title-band h1 {
+  margin: 0;
+  color: var(--ink);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: clamp(44px, 7vw, 76px);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+.document-lead {
+  max-width: 840px;
+  color: var(--muted);
+  font-size: clamp(15px, 1.35vw, 18px);
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.document-card.cds--tile {
+  position: relative;
+  max-width: 1080px;
+  margin: 0 0 0 auto;
+  padding: clamp(28px, 5vw, 56px);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface-card);
+}
+
+.floating-outline {
+  position: fixed;
+  top: calc(var(--header-height) + var(--outline-gap));
+  left: clamp(18px, 3vw, 48px);
+  display: grid;
+  width: clamp(170px, 15vw, 230px);
+  max-height: calc(100vh - var(--header-height) - (var(--outline-gap) * 2));
+  gap: 2px;
+  overflow-y: auto;
+  padding: 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--muted);
+}
+
+.floating-outline strong {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.floating-outline a {
+  display: block;
+  overflow: hidden;
+  padding: 7px 8px;
+  border-left: 2px solid transparent;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.floating-outline a:hover,
+.floating-outline a:focus-visible {
+  border-left-color: var(--primary);
+  background: var(--surface-soft);
+  color: var(--ink);
+  outline: none;
+}
+
+.markdown-document {
+  color: var(--body);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.markdown-document h1,
+.markdown-document h2,
+.markdown-document h3,
+.markdown-document h4,
+.markdown-document h5,
+.markdown-document h6 {
+  color: var(--ink);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.markdown-document h1 {
+  margin: 2.4em 0 0.6em;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1.1;
+}
+
+.markdown-document h2 {
+  margin: 2.2em 0 0.7em;
+  padding-top: 1.2em;
+  border-top: 1px solid var(--hairline);
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+}
+
+.markdown-document h3 {
+  margin: 1.9em 0 0.65em;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.15;
+}
+
+.markdown-document h4,
+.markdown-document h5,
+.markdown-document h6 {
+  margin: 1.6em 0 0.55em;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.markdown-document h1:first-child,
+.markdown-document h2:first-child,
+.markdown-document h3:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.markdown-document p {
+  margin: 0 0 1.1em;
+}
+
+.markdown-document strong {
+  color: var(--body-strong);
+  font-weight: 500;
+}
+
+.markdown-document em {
+  color: var(--body-strong);
+}
+
+.markdown-document a {
+  color: var(--primary-active);
+  text-decoration-color: var(--primary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.markdown-document ul,
+.markdown-document ol {
+  margin: 0 0 1.25em;
+  padding-left: 1.35em;
+}
+
+.markdown-document li {
+  margin: 0.4em 0;
+  padding-left: 0.2em;
+}
+
+.markdown-document li::marker {
+  color: var(--primary);
+}
+
+.markdown-document li > p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-document blockquote {
+  margin: 1.8em 0;
+  padding: 24px 28px;
+  border-left: 4px solid var(--primary);
+  border-radius: 12px;
+  background: var(--canvas);
+  color: var(--body-strong);
+  font-family: inherit;
+  font-size: clamp(18px, 2vw, 24px);
+  line-height: 1.45;
+}
+
+.markdown-document code {
+  padding: 0.12em 0.36em;
+  border-radius: 4px;
+  background: var(--hairline-soft);
+  color: var(--primary-active);
+  font-family: "JetBrains Mono", var(--vscode-editor-font-family, Consolas, monospace);
+  font-size: 0.9em;
+}
+
+.markdown-document pre {
+  margin: 1.6em 0;
+  overflow: auto;
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--surface-dark);
+}
+
+.code-copy-wrap {
+  position: relative;
+  margin: 1.6em 0;
+}
+
+.code-copy-wrap pre {
+  margin: 0;
+  padding-top: 48px;
+}
+
+.code-copy-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  min-width: 58px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(250, 249, 245, 0.18);
+  border-radius: 6px;
+  background: var(--surface-dark-soft);
+  color: var(--on-dark);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.code-copy-button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.markdown-document pre code {
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: var(--on-dark);
+  font-family: "JetBrains Mono", var(--vscode-editor-font-family, Consolas, monospace);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.markdown-document table {
+  width: 100%;
+  margin: 1.6em 0;
+  border: 1px solid var(--hairline);
+  border-collapse: collapse;
+  border-radius: 12px;
+  background: var(--canvas);
+  font-size: 14px;
+}
+
+.markdown-document th,
+.markdown-document td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--hairline-soft);
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-document th {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.markdown-document tr:last-child td {
+  border-bottom: 0;
+}
+
+.task-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.task-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.task-list-item > .task-list-item-checkbox {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 0.28em 0 0;
+  accent-color: var(--primary);
+}
+
+.markdown-document hr {
+  height: 1px;
+  margin: 2em 0;
+  border: 0;
+  background: var(--hairline);
+}
+
+.markdown-document img {
+  display: block;
+  max-width: 100%;
+  margin: 1.6em 0;
+  border-radius: 16px;
+}
+
+.markui-empty-state.cds--tile {
+  display: grid;
+  width: min(720px, calc(100% - 40px));
+  min-height: 420px;
+  margin: 96px auto;
+  place-items: center;
+  padding: 52px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface-card);
+  text-align: center;
+}
+
+.markui-empty-state svg {
+  color: var(--primary);
+}
+
+.markui-empty-state h1 {
+  margin: 18px 0 10px;
+  color: var(--ink);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: clamp(30px, 5vw, 54px);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+}
+
+.markui-empty-state p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+@media (max-width: 1180px) {
+  .floating-outline {
+    position: static;
+    width: auto;
+    max-height: 220px;
+    margin-bottom: 28px;
+  }
+}
+
+@media (max-width: 680px) {
+  .document-page {
+    padding: 56px 16px;
+  }
+
+  .document-title-band {
+    margin-bottom: 40px;
+  }
+
+  .document-title-band h1 {
+    font-size: 42px;
+  }
+
+  .document-card.cds--tile {
+    padding: 24px;
+  }
+
+  .markdown-document {
+    font-size: 15px;
+  }
+
+  .floating-outline {
+    max-height: 180px;
+  }
+}
