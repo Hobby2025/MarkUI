@@ -50,7 +50,10 @@ export function renderMarkdownSections(
   source: string,
   cache = new Map<string, MarkdownRenderSection>()
 ): MarkdownRenderSection[] {
-  const tokens = markdown.parse(source, {});
+  const env = {
+    source
+  };
+  const tokens = markdown.parse(source, env);
   const tokenSections = splitTopLevelSections(tokens);
 
   return tokenSections.map((sectionTokens, index) => {
@@ -63,7 +66,7 @@ export function renderMarkdownSections(
 
     const renderedSection: MarkdownRenderSection = {
       key: signature,
-      html: markdown.renderer.render(sectionTokens, markdown.options, {}),
+      html: markdown.renderer.render(sectionTokens, markdown.options, env),
       headingId: findSectionHeadingId(sectionTokens)
     };
 

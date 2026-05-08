@@ -53,3 +53,9 @@ const cachedSections = cachedRenderer(sectionMarkdown);
 const reusedSections = cachedRenderer(sectionMarkdown);
 
 assert.equal(reusedSections[1], cachedSections[1], '변경되지 않은 섹션은 캐시된 렌더 결과 객체를 재사용해야 합니다.');
+
+const indentedSections = renderMarkdownSections('    const value = 1;');
+const indentedSectionHtml = indentedSections.map((section) => section.html).join('');
+
+assert.match(indentedSectionHtml, /data-code="%20%20%20%20const%20value%20%3D%201%3B"/, '섹션 렌더링도 들여쓰기 코드 블록의 원문 공백 4칸을 유지해야 합니다.');
+assert.match(indentedSectionHtml, /<span class="indent-unit" aria-hidden="true">    <\/span>const value = 1;/, '섹션 렌더링도 들여쓰기 코드 블록의 공백 4칸 영역을 표시해야 합니다.');

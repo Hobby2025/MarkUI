@@ -519,6 +519,12 @@ a {
   margin-right: 0.25ch;
   border-radius: 3px;
   background: linear-gradient(90deg, rgba(120, 169, 255, 0.18), rgba(120, 169, 255, 0.06));
+  color: var(--primary-muted);
+  text-align: center;
+}
+
+.indented-code-wrap .indent-unit::before {
+  content: "····";
 }
 
 .code-copy-button {
