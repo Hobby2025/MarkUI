@@ -1,15 +1,14 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Tile } from '@carbon/react/es/components/Tile/Tile.js';
 import Header from '@carbon/react/es/components/UIShell/Header.js';
 import HeaderName from '@carbon/react/es/components/UIShell/HeaderName.js';
-import { Document } from '@carbon/icons-react';
+import { Document, Download } from '@carbon/icons-react';
 import { getVscodeApi } from './vscodeApi';
 import { createMarkdownSectionRenderer } from './markdownRenderer';
 import type { MarkdownRenderSection } from './markdownRenderer';
 import { buildOutlineTree, createDocumentPage } from './documentPage';
 import type { OutlineItem, OutlineNode } from './documentPage';
-import 'highlight.js/styles/github-dark.css';
 
 type PreviewMetadataItem = {
   key: string;
@@ -28,10 +27,10 @@ type PreviewMetadata = {
 };
 
 type ExtensionMessage =
-  | {
-      type: 'document';
-      payload: PreviewDocument;
-    };
+  {
+    type: 'document';
+    payload: PreviewDocument;
+  };
 
 export function MarkdownPreviewApp(): ReactElement {
   const articleRef = useRef<HTMLElement | null>(null);
@@ -49,6 +48,33 @@ export function MarkdownPreviewApp(): ReactElement {
     };
   });
 
+  const fileTitle = useMemo(() => getFileName(document.fileName), [document.fileName]);
+  const renderMarkdownSections = useMemo(() => createMarkdownSectionRenderer(), []);
+  const page = useMemo(() => createDocumentPage(document.text, fileTitle), [document.text, fileTitle]);
+  const renderedMarkdownSections = useMemo(
+    () => renderMarkdownSections(page.body),
+    [page.body, renderMarkdownSections]
+  );
+  const hasDocument = document.text.trim().length > 0;
+  const requestPrintableDocument = useCallback(() => {
+    const documentPage = window.document.querySelector<HTMLElement>('.document-page');
+
+    if (!documentPage || !hasDocument) {
+      return;
+    }
+
+    const printRoot = documentPage.cloneNode(true) as HTMLElement;
+    printRoot.querySelector('.floating-outline')?.remove();
+
+    getVscodeApi()?.postMessage({
+      type: 'requestPrint',
+      payload: {
+        fileName: document.fileName,
+        html: `<main class="markui-document-shell">${printRoot.outerHTML}</main>`
+      }
+    });
+  }, [document.fileName, hasDocument]);
+
   useEffect(() => {
     const vscodeApi = getVscodeApi();
     const handleMessage = (event: MessageEvent<ExtensionMessage>) => {
@@ -65,15 +91,6 @@ export function MarkdownPreviewApp(): ReactElement {
 
     return () => window.removeEventListener('message', handleMessage);
   }, []);
-
-  const fileTitle = useMemo(() => getFileName(document.fileName), [document.fileName]);
-  const renderMarkdownSections = useMemo(() => createMarkdownSectionRenderer(), []);
-  const page = useMemo(() => createDocumentPage(document.text, fileTitle), [document.text, fileTitle]);
-  const renderedMarkdownSections = useMemo(
-    () => renderMarkdownSections(page.body),
-    [page.body, renderMarkdownSections]
-  );
-  const hasDocument = document.text.trim().length > 0;
 
   useEffect(() => {
     const article = articleRef.current;
@@ -145,6 +162,17 @@ export function MarkdownPreviewApp(): ReactElement {
           Preview
         </HeaderName>
         <DocumentMetadata metadata={document.metadata} />
+        <button
+          aria-label="Print PDF"
+          className="markui-pdf-button"
+          disabled={!hasDocument}
+          onClick={requestPrintableDocument}
+          title="Print PDF"
+          type="button"
+        >
+          <Download size={18} />
+          <span>PDF 다운로드</span>
+        </button>
       </Header>
 
       {hasDocument ? (

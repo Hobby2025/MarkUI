@@ -2,7 +2,7 @@
   "name": "markui",
   "displayName": "MarkUI",
   "description": "A React-powered component-style Markdown preview extension for VS Code.",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "stjoo0925",
   "license": "MIT",
   "icon": "resources/crayon_star_marketplace.png",
@@ -60,7 +60,7 @@
     }
   },
   "scripts": {
-    "test": "tsx tests/markdownDocument.test.ts && tsx tests/markdownRenderer.test.ts && tsx tests/documentPage.test.ts && tsx tests/previewPanelConnection.test.ts",
+    "test": "tsx tests/markdownDocument.test.ts && tsx tests/markdownRenderer.test.ts && tsx tests/documentPage.test.ts && tsx tests/previewPanelConnection.test.ts && tsx tests/printPreview.test.ts",
     "check": "npm test && tsc --noEmit && tsc -p tsconfig.webview.json --noEmit && vite build",
     "build": "tsc -p . && tsc -p tsconfig.webview.json --noEmit && vite build",
     "watch": "tsc -w -p .",

@@ -1,3 +1,5 @@
+@import "highlight.js/styles/github-dark.css";
+
 :root {
   color-scheme: light;
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -31,6 +33,13 @@
 
 * {
   box-sizing: border-box;
+}
+
+html,
+body,
+body * {
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 html {
@@ -116,7 +125,7 @@ a {
   display: flex;
   min-width: 0;
   margin: 0 0 0 auto;
-  padding: 0 clamp(20px, 4vw, 48px) 0 16px;
+  padding: 0 12px 0 16px;
   border-top: 0;
   color: var(--muted);
   gap: 18px;
@@ -217,6 +226,39 @@ a {
 
 .cds--header .document-metadata-more dl dd {
   max-width: none;
+}
+
+.markui-pdf-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  margin-right: clamp(20px, 4vw, 48px);
+  padding: 0 12px;
+  border: 1px solid var(--primary-line);
+  border-radius: 6px;
+  background: var(--surface-card);
+  color: var(--primary-active);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.markui-pdf-button:hover,
+.markui-pdf-button:focus-visible {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  outline: none;
+}
+
+.markui-pdf-button:disabled {
+  border-color: var(--hairline);
+  color: var(--muted-soft);
+  cursor: not-allowed;
+  opacity: 0.62;
 }
 
 .cds--tile {
@@ -935,6 +977,11 @@ a {
     display: none;
   }
 
+  .markui-pdf-button {
+    margin-right: 16px;
+    padding: 0 10px;
+  }
+
   .document-metadata {
     min-width: 0;
   }
@@ -973,5 +1020,23 @@ a {
 
   .floating-outline {
     max-height: 180px;
+  }
+}
+
+@media print {
+  .floating-outline {
+    display: none !important;
+  }
+
+  .markdown-document table {
+    break-inside: auto;
+  }
+
+  .markdown-document thead {
+    display: table-header-group;
+  }
+
+  .markdown-document tr {
+    break-inside: avoid;
   }
 }
