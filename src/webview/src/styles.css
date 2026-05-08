@@ -474,6 +474,29 @@ a {
   margin-bottom: 0;
 }
 
+.markdown-document .footnotes-list {
+  padding-left: 1.6em;
+}
+
+.markdown-document .footnote-item {
+  padding-left: 0.25em;
+}
+
+.markdown-document .footnote-item p {
+  margin-bottom: 0.7em;
+}
+
+.markdown-document .footnote-continuation {
+  display: inline-block;
+  margin-top: 0.3em;
+  padding-left: 1.5em;
+}
+
+.markdown-document .footnote-backref {
+  margin-left: 0.35em;
+  text-decoration: none;
+}
+
 .markdown-document blockquote {
   margin: 1.8em 0;
   padding: 24px 28px;
@@ -511,20 +534,6 @@ a {
 .code-copy-wrap pre {
   margin: 0;
   padding-top: 36px;
-}
-
-.indented-code-wrap .indent-unit {
-  display: inline-block;
-  width: 4ch;
-  margin-right: 0.25ch;
-  border-radius: 3px;
-  background: linear-gradient(90deg, rgba(120, 169, 255, 0.18), rgba(120, 169, 255, 0.06));
-  color: var(--primary-muted);
-  text-align: center;
-}
-
-.indented-code-wrap .indent-unit::before {
-  content: "····";
 }
 
 .code-copy-button {
@@ -581,7 +590,7 @@ a {
 }
 
 .markdown-document th {
-  background: var(--primary-soft);
+  background: #d8ebff;
   color: var(--ink);
   font-weight: 600;
 }

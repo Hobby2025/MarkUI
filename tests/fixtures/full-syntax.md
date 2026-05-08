@@ -31,3 +31,4 @@ console.log(message);
 <script>alert('xss')</script>
 
 [^note]: 각주 본문입니다.
+    각주 후속 설명입니다.

@@ -30,6 +30,7 @@ const markdown = new MarkdownIt({
 markdown.enable(['table', 'strikethrough']);
 markdown.use(taskListPlugin);
 markdown.use(footnote);
+applyFootnoteContinuations(markdown);
 applyHeadingIds(markdown);
 applyLinkSecurity(markdown.renderer);
 applyCodeCopyRenderer(markdown.renderer);
@@ -164,6 +165,61 @@ function attrJoinUnique(token: Token, name: string, value: string): void {
   token.attrSet(name, Array.from(values).join(' '));
 }
 
+function applyFootnoteContinuations(md: MarkdownIt): void {
+  md.core.ruler.after('footnote_tail', 'markui_footnote_continuations', (state: StateCore) => {
+    let footnoteDepth = 0;
+
+    state.tokens.forEach((token) => {
+      if (token.type === 'footnote_open') {
+        footnoteDepth += 1;
+        return;
+      }
+
+      if (token.type === 'footnote_close') {
+        footnoteDepth = Math.max(0, footnoteDepth - 1);
+        return;
+      }
+
+      if (footnoteDepth === 0 || token.type !== 'inline' || !token.children) {
+        return;
+      }
+
+      token.children = wrapFootnoteSoftbreaks(token.children, state);
+    });
+  });
+}
+
+function wrapFootnoteSoftbreaks(children: Token[], state: StateCore): Token[] {
+  const nextChildren: Token[] = [];
+  let continuationOpen = false;
+
+  children.forEach((child) => {
+    if (child.type !== 'softbreak') {
+      nextChildren.push(child);
+      return;
+    }
+
+    if (continuationOpen) {
+      nextChildren.push(createHtmlInlineToken(state, '</span>'));
+    }
+
+    nextChildren.push(createHtmlInlineToken(state, '<br><span class="footnote-continuation">'));
+    continuationOpen = true;
+  });
+
+  if (continuationOpen) {
+    nextChildren.push(createHtmlInlineToken(state, '</span>'));
+  }
+
+  return nextChildren;
+}
+
+function createHtmlInlineToken(state: StateCore, content: string): Token {
+  const token = new state.Token('html_inline', '', 0);
+  token.content = content;
+  return token;
+}
+
 function applyLinkSecurity(renderer: Renderer): void {
   const defaultRender = renderer.rules.link_open ?? ((tokens, index, options, _env, self) => {
     return self.renderToken(tokens, index, options);
@@ -221,8 +277,8 @@ function applyCodeCopyRenderer(renderer: Renderer): void {
 
   renderer.rules.code_block = (tokens, index, _options, env) => {
     const token = tokens[index];
-    const source = getOriginalIndentedCode(token, env) ?? token.content;
-    const encodedSource = encodeURIComponent(source);
+    const copySource = getOriginalIndentedCode(token, env) ?? token.content;
+    const encodedSource = encodeURIComponent(copySource);
 
     return [
       '<div class="code-copy-wrap indented-code-wrap">',
@@ -230,27 +286,11 @@ function applyCodeCopyRenderer(renderer: Renderer): void {
       encodedSource,
       '" aria-label="코드 블록 복사">복사</button>',
       '<pre><code>',
-      renderIndentedCode(source),
+      escapeHtml(token.content),
       '</code></pre>',
       '</div>'
     ].join('');
   };
-}
-
-function renderIndentedCode(source: string): string {
-  return source
-    .split('\n')
-    .map((line) => {
-      if (!line.startsWith('    ')) {
-        return escapeHtml(line);
-      }
-
-      return [
-        '<span class="indent-unit" aria-hidden="true">    </span>',
-        escapeHtml(line.slice(4))
-      ].join('');
-    })
-    .join('\n');
 }
 
 function getOriginalIndentedCode(token: Token, env: unknown): string | undefined {
