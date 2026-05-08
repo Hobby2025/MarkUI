@@ -24,6 +24,8 @@ const message = 'hello';
 console.log(message);
 ```
 
+    const indented = true;
+
 ![대체 텍스트](https://example.com/image.png)
 
 <script>alert('xss')</script>

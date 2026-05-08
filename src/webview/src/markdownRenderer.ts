@@ -5,6 +5,14 @@ import type Token from 'markdown-it/lib/token.mjs';
 import hljs from 'highlight.js/lib/common';
 import footnote from 'markdown-it-footnote';
 
+export type MarkdownRenderSection = {
+  key: string;
+  html: string;
+  headingId: string | null;
+};
+
+const maxCachedSections = 240;
+
 const markdown = new MarkdownIt({
   html: false,
   linkify: true,
@@ -22,12 +30,47 @@ const markdown = new MarkdownIt({
 markdown.enable(['table', 'strikethrough']);
 markdown.use(taskListPlugin);
 markdown.use(footnote);
+applyHeadingIds(markdown);
 applyLinkSecurity(markdown.renderer);
-applyHeadingIds(markdown.renderer);
 applyCodeCopyRenderer(markdown.renderer);
 
 export function renderMarkdown(source: string): string {
-  return markdown.render(source);
+  return markdown.render(source, {
+    source
+  });
+}
+
+export function createMarkdownSectionRenderer(): (source: string) => MarkdownRenderSection[] {
+  const cache = new Map<string, MarkdownRenderSection>();
+
+  return (source: string) => renderMarkdownSections(source, cache);
+}
+
+export function renderMarkdownSections(
+  source: string,
+  cache = new Map<string, MarkdownRenderSection>()
+): MarkdownRenderSection[] {
+  const tokens = markdown.parse(source, {});
+  const tokenSections = splitTopLevelSections(tokens);
+
+  return tokenSections.map((sectionTokens, index) => {
+    const signature = createSectionSignature(sectionTokens, index);
+    const cached = cache.get(signature);
+
+    if (cached) {
+      return cached;
+    }
+
+    const renderedSection: MarkdownRenderSection = {
+      key: signature,
+      html: markdown.renderer.render(sectionTokens, markdown.options, {}),
+      headingId: findSectionHeadingId(sectionTokens)
+    };
+
+    cache.set(signature, renderedSection);
+    trimSectionCache(cache);
+    return renderedSection;
+  });
 }
 
 export function createHeadingId(text: string, fallbackIndex = 0): string {
@@ -135,19 +178,19 @@ function applyLinkSecurity(renderer: Renderer): void {
   };
 }
 
-function applyHeadingIds(renderer: Renderer): void {
-  const defaultRender = renderer.rules.heading_open ?? ((tokens, index, options, _env, self) => {
-    return self.renderToken(tokens, index, options);
+function applyHeadingIds(md: MarkdownIt): void {
+  md.core.ruler.after('inline', 'markui_heading_ids', (state: StateCore) => {
+    state.tokens.forEach((token, index, tokens) => {
+      if (token.type !== 'heading_open') {
+        return;
+      }
+
+      const inlineToken = tokens[index + 1];
+      const headingText = inlineToken?.content ?? '';
+
+      token.attrSet('id', createHeadingId(headingText, index));
+    });
   });
-
-  renderer.rules.heading_open = (tokens, index, options, env, self) => {
-    const inlineToken = tokens[index + 1];
-    const headingText = inlineToken?.content ?? '';
-
-    tokens[index].attrSet('id', createHeadingId(headingText, index));
-
-    return defaultRender(tokens, index, options, env, self);
-  };
 }
 
 function applyCodeCopyRenderer(renderer: Renderer): void {
@@ -163,7 +206,7 @@ function applyCodeCopyRenderer(renderer: Renderer): void {
       '<div class="code-copy-wrap">',
       '<button class="code-copy-button" type="button" data-code="',
       encodedSource,
-      '" aria-label="코드블록 복사">복사</button>',
+      '" aria-label="코드 블록 복사">복사</button>',
       '<pre><code',
       language ? ` class="language-${escapeHtml(language)}"` : '',
       '>',
@@ -173,21 +216,47 @@ function applyCodeCopyRenderer(renderer: Renderer): void {
     ].join('');
   };
 
-  renderer.rules.code_block = (tokens, index) => {
-    const source = tokens[index].content;
+  renderer.rules.code_block = (tokens, index, _options, env) => {
+    const token = tokens[index];
+    const source = getOriginalIndentedCode(token, env) ?? token.content;
     const encodedSource = encodeURIComponent(source);
 
     return [
-      '<div class="code-copy-wrap">',
+      '<div class="code-copy-wrap indented-code-wrap">',
       '<button class="code-copy-button" type="button" data-code="',
       encodedSource,
-      '" aria-label="코드블록 복사">복사</button>',
+      '" aria-label="코드 블록 복사">복사</button>',
       '<pre><code>',
-      escapeHtml(source),
+      renderIndentedCode(source),
       '</code></pre>',
       '</div>'
     ].join('');
   };
+}
+
+function renderIndentedCode(source: string): string {
+  return source
+    .split('\n')
+    .map((line) => {
+      if (!line.startsWith('    ')) {
+        return escapeHtml(line);
+      }
+
+      return [
+        '<span class="indent-unit" aria-hidden="true">    </span>',
+        escapeHtml(line.slice(4))
+      ].join('');
+    })
+    .join('\n');
+}
+
+function getOriginalIndentedCode(token: Token, env: unknown): string | undefined {
+  if (!token.map || !env || typeof env !== 'object' || !('source' in env) || typeof env.source !== 'string') {
+    return undefined;
+  }
+
+  const [startLine, endLine] = token.map;
+  return env.source.split(/\r?\n/).slice(startLine, endLine).join('\n');
 }
 
 function normalizeUrl(value: string): string {
@@ -205,4 +274,74 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function splitTopLevelSections(tokens: Token[]): Token[][] {
+  const sections: Token[][] = [];
+  let currentSection: Token[] = [];
+
+  tokens.forEach((token) => {
+    if (isTopLevelHeadingOpen(token) && currentSection.length > 0) {
+      sections.push(currentSection);
+      currentSection = [];
+    }
+
+    currentSection.push(token);
+  });
+
+  if (currentSection.length > 0) {
+    sections.push(currentSection);
+  }
+
+  return sections;
+}
+
+function isTopLevelHeadingOpen(token: Token): boolean {
+  return token.type === 'heading_open' && token.level === 0;
+}
+
+function createSectionSignature(tokens: Token[], index: number): string {
+  const content = tokens
+    .map((token) => [
+      token.type,
+      token.tag,
+      token.nesting,
+      token.level,
+      token.markup,
+      token.info,
+      token.content,
+      token.attrs?.map(([name, value]) => `${name}=${value}`).join('&') ?? ''
+    ].join('\u001f'))
+    .join('\u001e');
+
+  return `${findSectionHeadingId(tokens) ?? `section-${index + 1}`}-${hashString(content)}`;
+}
+
+function findSectionHeadingId(tokens: Token[]): string | null {
+  const headingToken = tokens.find(isTopLevelHeadingOpen);
+
+  return headingToken?.attrGet('id') ?? null;
+}
+
+function hashString(value: string): string {
+  let hash = 2166136261;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(36);
+}
+
+function trimSectionCache(cache: Map<string, MarkdownRenderSection>): void {
+  while (cache.size > maxCachedSections) {
+    const oldestKey = cache.keys().next().value;
+
+    if (!oldestKey) {
+      return;
+    }
+
+    cache.delete(oldestKey);
+  }
 }
