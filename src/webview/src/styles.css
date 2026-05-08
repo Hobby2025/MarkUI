@@ -22,6 +22,9 @@
   --muted-soft: #8e8b82;
   --on-dark: #faf9f5;
   --on-dark-soft: #a09d96;
+  --scrollbar-thumb: rgba(108, 106, 100, 0.26);
+  --scrollbar-thumb-hover: rgba(108, 106, 100, 0.42);
+  --scrollbar-track: transparent;
   --header-height: 64px;
   --outline-gap: 32px;
 }
@@ -32,6 +35,8 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
 }
 
 body {
@@ -39,6 +44,32 @@ body {
   min-width: 360px;
   background: #f4f4f4;
   color: var(--ink);
+}
+
+* {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--scrollbar-thumb);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  background-clip: padding-box;
 }
 
 button,
