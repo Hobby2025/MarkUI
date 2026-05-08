@@ -557,6 +557,18 @@ a {
   color: var(--body-strong);
 }
 
+.markdown-document sub,
+.markdown-document sup {
+  font-size: 0.72em;
+  line-height: 0;
+}
+
+.markdown-document ins {
+  text-decoration-color: var(--primary);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+}
+
 .markdown-document a {
   color: var(--primary-active);
   text-decoration-color: var(--primary);
@@ -618,6 +630,50 @@ a {
   line-height: 1.5;
 }
 
+.markdown-document .markdown-alert {
+  position: relative;
+  padding: 18px 20px 18px 24px;
+  border-left-width: 5px;
+  border-radius: 8px;
+  background: var(--surface-card);
+  color: var(--body);
+  font-size: 16px;
+}
+
+.markdown-document .markdown-alert::before {
+  display: block;
+  margin-bottom: 0.55em;
+  color: var(--body-strong);
+  content: attr(data-alert-title);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.markdown-document .markdown-alert p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-document .markdown-alert-note {
+  border-left-color: var(--primary);
+}
+
+.markdown-document .markdown-alert-tip {
+  border-left-color: #198038;
+}
+
+.markdown-document .markdown-alert-important {
+  border-left-color: #8a3ffc;
+}
+
+.markdown-document .markdown-alert-warning {
+  border-left-color: #f1c21b;
+}
+
+.markdown-document .markdown-alert-caution {
+  border-left-color: #da1e28;
+}
+
 .markdown-document code {
   padding: 0.12em 0.36em;
   border-radius: 4px;
@@ -625,6 +681,44 @@ a {
   color: var(--primary-active);
   font-family: "JetBrains Mono", var(--vscode-editor-font-family, Consolas, monospace);
   font-size: 0.9em;
+}
+
+.markdown-document kbd {
+  display: inline-block;
+  min-width: 1.7em;
+  padding: 0.12em 0.45em;
+  border: 1px solid var(--hairline);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--canvas);
+  color: var(--body-strong);
+  font-family: "JetBrains Mono", var(--vscode-editor-font-family, Consolas, monospace);
+  font-size: 0.86em;
+  line-height: 1.35;
+  text-align: center;
+  vertical-align: 0.08em;
+}
+
+.markdown-document details {
+  margin: 1.4em 0;
+  padding: 14px 16px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--canvas);
+}
+
+.markdown-document summary {
+  color: var(--body-strong);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.markdown-document details[open] summary {
+  margin-bottom: 0.85em;
+}
+
+.markdown-document details > :last-child {
+  margin-bottom: 0;
 }
 
 .markdown-document pre {

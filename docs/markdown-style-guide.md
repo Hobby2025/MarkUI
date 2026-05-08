@@ -6,7 +6,7 @@ This guide defines writing conventions for Markdown documents that should render
 
 - Use CommonMark syntax as the baseline.
 - Use GitHub Flavored Markdown-style syntax only within the range supported by MarkUI.
-- Raw HTML is not rendered as executable HTML for security reasons.
+- Raw HTML is filtered for security. MarkUI renders only explicitly supported safe HTML tags.
 - Consider document structure, accessibility, and mobile rendering together.
 
 ## Document Structure
@@ -33,7 +33,9 @@ MarkUI uses `##`, `###`, and `####` headings in the body as outline entries.
 | Basic | Headings, paragraphs, blockquotes, lists, links, images, code, horizontal rules | Rendered |
 | GFM-style | Tables, strikethrough, task lists, autolinks | Rendered |
 | MarkUI extensions | Footnotes, code copy, heading IDs, outline | Rendered |
-| HTML | `<script>`, `<details>`, `<kbd>`, and similar tags | Escaped as text |
+| Safe HTML | `<details>`, `<summary>`, `<kbd>`, `<br>`, `<sub>`, `<sup>`, `<ins>` | Rendered after unsupported attributes are removed |
+| GitHub alerts | `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]` | Rendered as alert callouts |
+| Unsafe HTML | `<script>`, event handlers, and unsupported tags | Escaped as text |
 | Unsupported extensions | Definition lists, math, diagrams | Displayed by regular Markdown rules |
 
 ## Links
@@ -85,9 +87,16 @@ npm run build
 - Keep essential information in the body, not in footnotes.
 - Preserve indentation for multi-line footnotes.
 
+## GitHub Alerts
+
+- Use alerts only for information that changes how readers should act.
+- Keep alert content short and avoid placing several alerts consecutively unless the document is demonstrating syntax.
+- Use `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, or `CAUTION` as the alert type.
+
 ## Security
 
-- HTML inside Markdown is not rendered as executable HTML.
+- Only the safe HTML tags listed above are rendered as executable HTML.
+- Unsupported HTML tags and attributes are escaped or removed before rendering.
 - HTML comments may be removed from the document body, so write user-visible information in regular Markdown.
 - Do not put sensitive information, tokens, internal paths, or personal information in HTML comments or metadata.
 
@@ -99,4 +108,4 @@ npm run build
 - [ ] Images include meaningful alternative text.
 - [ ] Tables are used only for real tabular data.
 - [ ] Code blocks specify a language when possible.
-- [ ] The document does not rely on executable HTML.
+- [ ] The document uses only MarkUI-supported safe HTML when raw HTML is necessary.

@@ -15,7 +15,7 @@ export type MarkdownRenderSection = {
 const maxCachedSections = 240;
 
 const markdown = new MarkdownIt({
-  html: false,
+  html: true,
   linkify: true,
   typographer: true,
   breaks: false,
@@ -32,8 +32,10 @@ markdown.enable(['table', 'strikethrough']);
 markdown.use(taskListPlugin);
 markdown.use(footnote);
 applyFootnoteContinuations(markdown);
+applyGitHubAlerts(markdown);
 applyHeadingIds(markdown);
 applyLinkSecurity(markdown.renderer);
+applySafeHtmlRenderer(markdown.renderer);
 applyCodeCopyRenderer(markdown.renderer);
 
 export function renderMarkdown(source: string): string {
@@ -120,8 +122,10 @@ function taskListPlugin(md: MarkdownIt): void {
       inlineToken.content = inlineToken.content.slice(match[0].length);
       removeTaskMarkerFromInlineChildren(inlineToken.children ?? [], match[0].length);
 
-      const checkboxToken = new state.Token('html_inline', '', 0);
-      checkboxToken.content = `<input class="task-list-item-checkbox" type="checkbox" disabled${checked ? ' checked' : ''}> `;
+      const checkboxToken = createTrustedHtmlInlineToken(
+        state,
+        `<input class="task-list-item-checkbox" type="checkbox" disabled${checked ? ' checked' : ''}> `
+      );
       inlineToken.children?.unshift(checkboxToken);
 
       attrJoinUnique(listItemToken, 'class', 'task-list-item');
@@ -169,6 +173,77 @@ function attrJoinUnique(token: Token, name: string, value: string): void {
   token.attrSet(name, Array.from(values).join(' '));
 }
 
+function applyGitHubAlerts(md: MarkdownIt): void {
+  md.core.ruler.after('inline', 'markui_github_alerts', (state: StateCore) => {
+    state.tokens.forEach((token, index, tokens) => {
+      if (token.type !== 'blockquote_open') {
+        return;
+      }
+
+      const paragraphToken = tokens[index + 1];
+      const inlineToken = tokens[index + 2];
+
+      if (paragraphToken?.type !== 'paragraph_open' || inlineToken?.type !== 'inline') {
+        return;
+      }
+
+      const alertType = getGitHubAlertType(inlineToken.content);
+
+      if (!alertType) {
+        return;
+      }
+
+      attrJoinUnique(token, 'class', `markdown-alert markdown-alert-${alertType.toLowerCase()}`);
+      token.attrSet('data-alert-title', alertType);
+      inlineToken.content = inlineToken.content.replace(createAlertMarkerPattern(alertType), '');
+      inlineToken.children = removeAlertMarkerFromInlineChildren(inlineToken.children ?? [], alertType);
+    });
+  });
+}
+
+function getGitHubAlertType(value: string): string | undefined {
+  const match = value.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\](?:[ \t]*(?:\r?\n|$)|[ \t]+)/i);
+  return match?.[1].toUpperCase();
+}
+
+function createAlertMarkerPattern(alertType: string): RegExp {
+  return new RegExp(`^\\[!${alertType}\\](?:[ \\t]*(?:\\r?\\n|$)|[ \\t]+)`, 'i');
+}
+
+function removeAlertMarkerFromInlineChildren(children: Token[], alertType: string): Token[] {
+  const markerPattern = createAlertMarkerPattern(alertType);
+  const nextChildren: Token[] = [];
+  let markerRemoved = false;
+  let shouldDropNextBreak = false;
+
+  children.forEach((child) => {
+    if (!markerRemoved && child.type === 'text') {
+      const nextContent = child.content.replace(markerPattern, '');
+
+      if (nextContent !== child.content) {
+        markerRemoved = true;
+        shouldDropNextBreak = nextContent.length === 0;
+
+        if (nextContent.length > 0) {
+          child.content = nextContent;
+          nextChildren.push(child);
+        }
+
+        return;
+      }
+    }
+
+    if (markerRemoved && shouldDropNextBreak && (child.type === 'softbreak' || child.type === 'hardbreak')) {
+      shouldDropNextBreak = false;
+      return;
+    }
+
+    nextChildren.push(child);
+  });
+
+  return nextChildren;
+}
+
 function applyFootnoteContinuations(md: MarkdownIt): void {
   md.core.ruler.after('footnote_tail', 'markui_footnote_continuations', (state: StateCore) => {
     let footnoteDepth = 0;
@@ -204,15 +279,15 @@ function wrapFootnoteSoftbreaks(children: Token[], state: StateCore): Token[] {
     }
 
     if (continuationOpen) {
-      nextChildren.push(createHtmlInlineToken(state, '</span>'));
+      nextChildren.push(createTrustedHtmlInlineToken(state, '</span>'));
     }
 
-    nextChildren.push(createHtmlInlineToken(state, '<br><span class="footnote-continuation">'));
+    nextChildren.push(createTrustedHtmlInlineToken(state, '<br><span class="footnote-continuation">'));
     continuationOpen = true;
   });
 
   if (continuationOpen) {
-    nextChildren.push(createHtmlInlineToken(state, '</span>'));
+    nextChildren.push(createTrustedHtmlInlineToken(state, '</span>'));
   }
 
   return nextChildren;
@@ -222,6 +297,29 @@ function createHtmlInlineToken(state: StateCore, content: string): Token {
   const token = new state.Token('html_inline', '', 0);
   token.content = content;
   return token;
+}
+
+function createTrustedHtmlInlineToken(state: StateCore, content: string): Token {
+  const token = createHtmlInlineToken(state, content);
+  token.meta = {
+    ...token.meta,
+    markuiTrustedHtml: true
+  };
+  return token;
+}
+
+function applySafeHtmlRenderer(renderer: Renderer): void {
+  renderer.rules.html_inline = (tokens, index) => {
+    const token = tokens[index];
+
+    if (isTrustedHtmlToken(token)) {
+      return token.content;
+    }
+
+    return sanitizeMarkdownHtml(token.content);
+  };
+
+  renderer.rules.html_block = (tokens, index) => sanitizeMarkdownHtml(tokens[index].content);
 }
 
 function applyLinkSecurity(renderer: Renderer): void {
@@ -295,6 +393,74 @@ function applyCodeCopyRenderer(renderer: Renderer): void {
       '</div>'
     ].join('');
   };
+}
+
+function sanitizeMarkdownHtml(value: string): string {
+  const tagPattern = /<\/?([A-Za-z][A-Za-z0-9:-]*)(\s[^<>]*)?>/g;
+  let output = '';
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = tagPattern.exec(value))) {
+    output += escapeHtml(value.slice(cursor, match.index));
+    output += renderAllowedHtmlTag(match[0], match[1], match[2] ?? '');
+    cursor = match.index + match[0].length;
+  }
+
+  output += escapeHtml(value.slice(cursor));
+  return output;
+}
+
+function renderAllowedHtmlTag(source: string, tagName: string, rawAttributes: string): string {
+  const normalizedTagName = tagName.toLowerCase();
+  const isClosingTag = /^<\//.test(source);
+
+  if (normalizedTagName === 'details') {
+    if (isClosingTag) {
+      return '</details>';
+    }
+
+    return hasOpenAttribute(rawAttributes) ? '<details open>' : '<details>';
+  }
+
+  if (normalizedTagName === 'summary') {
+    return isClosingTag ? '</summary>' : '<summary>';
+  }
+
+  if (normalizedTagName === 'kbd') {
+    return isClosingTag ? '</kbd>' : '<kbd>';
+  }
+
+  if (normalizedTagName === 'br') {
+    return isClosingTag ? '' : '<br>';
+  }
+
+  if (normalizedTagName === 'sub') {
+    return isClosingTag ? '</sub>' : '<sub>';
+  }
+
+  if (normalizedTagName === 'sup') {
+    return isClosingTag ? '</sup>' : '<sup>';
+  }
+
+  if (normalizedTagName === 'ins') {
+    return isClosingTag ? '</ins>' : '<ins>';
+  }
+
+  return escapeHtml(source);
+}
+
+function hasOpenAttribute(rawAttributes: string): boolean {
+  return /\sopen(?:\s*=\s*(?:"open"|'open'|open))?(?=\s|$)/i.test(rawAttributes);
+}
+
+function isTrustedHtmlToken(token: Token): boolean {
+  return Boolean(
+    token.meta &&
+    typeof token.meta === 'object' &&
+    'markuiTrustedHtml' in token.meta &&
+    token.meta.markuiTrustedHtml
+  );
 }
 
 function getOriginalIndentedCode(token: Token, env: unknown): string | undefined {
