@@ -3,3 +3,4 @@ dist/
 media/preview/
 *.vsix
 *.log
+.code-review-graph
