@@ -1,0 +1,11 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Crayon Star IDE Icon</title>
+  <desc id="desc">A simple childlike crayon-drawn blue star optimized for IDE icon use.</desc>
+  <path d="M66 10L78 43L113 47L87 69L95 104L65 86L35 105L42 70L15 48L51 43L66 10Z" fill="#5CB8FF"/>
+  <path d="M66 10L78 43L113 47L87 69L95 104L65 86L35 105L42 70L15 48L51 43L66 10Z" stroke="#0F62FE" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M66 10L78 43L113 47L87 69L95 104L65 86L35 105L42 70L15 48L51 43L66 10Z" stroke="#002D9C" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M54 39C61 31 67 29 74 28" stroke="#D0E8FF" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+  <path d="M39 52C50 53 59 51 68 48" stroke="#8FD0FF" stroke-width="4.5" stroke-linecap="round" opacity="0.78"/>
+  <path d="M73 52C84 57 94 58 104 58" stroke="#0043CE" stroke-width="4" stroke-linecap="round" opacity="0.62"/>
+  <path d="M51 72C63 77 75 77 86 74" stroke="#78A9FF" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+</svg>

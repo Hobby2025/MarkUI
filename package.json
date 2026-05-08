@@ -5,6 +5,7 @@
   "version": "0.0.1",
   "publisher": "stjoo0925",
   "license": "MIT",
+  "icon": "resources/crayon_star_marketplace.svg",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -20,8 +21,12 @@
     "commands": [
       {
         "command": "markui.openPreview",
-        "title": "MarkUI: Markdown 미리보기 열기",
-        "category": "MarkUI"
+        "title": "Markdown 미리보기 열기",
+        "category": "MarkUI",
+        "icon": {
+          "light": "resources/crayon_star_ide.svg",
+          "dark": "resources/crayon_star_ide.svg"
+        }
       }
     ],
     "menus": {

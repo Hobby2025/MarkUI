@@ -1,0 +1,23 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Crayon Star Marketplace Icon</title>
+  <desc id="desc">A playful childlike crayon-drawn blue star for VSCode Marketplace use.</desc>
+  <rect width="512" height="512" rx="112" fill="#EAF4FF"/>
+  <g opacity="0.16">
+    <path d="M72 104C122 78 179 72 233 89C303 111 345 84 420 103" stroke="#0F62FE" stroke-width="14" stroke-linecap="round"/>
+    <path d="M52 394C117 354 179 366 242 389C306 413 369 418 451 374" stroke="#78A9FF" stroke-width="12" stroke-linecap="round"/>
+    <path d="M98 443C161 421 224 420 292 442" stroke="#0043CE" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(256 262) rotate(-8) translate(-256 -262)">
+    <path d="M260 78L308 187L425 199L337 277L362 393L260 333L158 393L183 277L95 199L212 187L260 78Z" fill="#5CB8FF"/>
+    <path d="M260 78L308 187L425 199L337 277L362 393L260 333L158 393L183 277L95 199L212 187L260 78Z" stroke="#0F62FE" stroke-width="26" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M260 78L308 187L425 199L337 277L362 393L260 333L158 393L183 277L95 199L212 187L260 78Z" stroke="#002D9C" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+    <path d="M225 163C248 138 268 132 283 128" stroke="#D0E8FF" stroke-width="18" stroke-linecap="round" opacity="0.9"/>
+    <path d="M164 217C194 218 215 214 239 204" stroke="#8FD0FF" stroke-width="13" stroke-linecap="round" opacity="0.75"/>
+    <path d="M300 210C329 220 353 223 390 224" stroke="#0043CE" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
+    <path d="M200 289C230 300 270 304 318 294" stroke="#78A9FF" stroke-width="14" stroke-linecap="round" opacity="0.68"/>
+    <path d="M238 330C255 319 274 320 293 331" stroke="#D0E8FF" stroke-width="11" stroke-linecap="round" opacity="0.75"/>
+  </g>
+  <circle cx="146" cy="130" r="10" fill="#78A9FF" opacity="0.58"/>
+  <circle cx="389" cy="132" r="8" fill="#0F62FE" opacity="0.5"/>
+  <circle cx="90" cy="322" r="7" fill="#0043CE" opacity="0.5"/>
+</svg>

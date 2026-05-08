@@ -4,8 +4,15 @@ type PreviewMessage = {
   type: 'document';
   payload: {
     fileName: string;
+    metadata: PreviewMetadata;
     text: string;
   };
+};
+
+type PreviewMetadata = {
+  author: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 type WebviewMessage =
@@ -64,19 +71,22 @@ export class MarkuiPreviewPanel {
     this.updateDocument();
   }
 
-  static open(extensionUri: vscode.Uri): void {
+  static open(extensionUri: vscode.Uri, sourceDocumentUri?: vscode.Uri): void {
+    const documentUri = sourceDocumentUri ?? getActiveMarkdownDocumentUri();
+
     if (MarkuiPreviewPanel.currentPanel) {
+      if (documentUri) {
+        MarkuiPreviewPanel.currentPanel.sourceDocumentUri = documentUri;
+      }
+
       MarkuiPreviewPanel.currentPanel.panel.reveal(vscode.ViewColumn.Beside);
       MarkuiPreviewPanel.currentPanel.updateDocument();
       return;
     }
 
-    const sourceDocument = vscode.window.activeTextEditor?.document.languageId === 'markdown'
-      ? vscode.window.activeTextEditor.document
-      : undefined;
     const panel = vscode.window.createWebviewPanel(
       'markuiPreview',
-      '▣ MarkUI',
+      'Markdown 미리보기',
       vscode.ViewColumn.Beside,
       {
         enableScripts: true,
@@ -85,7 +95,7 @@ export class MarkuiPreviewPanel {
       }
     );
 
-    MarkuiPreviewPanel.currentPanel = new MarkuiPreviewPanel(panel, extensionUri, sourceDocument?.uri);
+    MarkuiPreviewPanel.currentPanel = new MarkuiPreviewPanel(panel, extensionUri, documentUri);
   }
 
   static disposeCurrent(): void {
@@ -94,29 +104,51 @@ export class MarkuiPreviewPanel {
   }
 
   private updateDocument(): void {
-    const document = this.getSourceDocument();
+    void this.postDocument();
+  }
+
+  private async postDocument(): Promise<void> {
+    const document = await this.getSourceDocument();
 
     if (!document) {
+      this.panel.title = 'Markdown 미리보기';
       void this.panel.webview.postMessage({
         type: 'document',
         payload: {
           fileName: 'Markdown 문서를 열어 주세요',
+          metadata: createEmptyMetadata(),
           text: ''
         }
       } satisfies PreviewMessage);
       return;
     }
 
+    this.panel.title = getFileName(document.fileName);
     void this.panel.webview.postMessage({
       type: 'document',
       payload: {
         fileName: document.fileName,
+        metadata: await this.createMetadata(document),
         text: document.getText()
       }
     } satisfies PreviewMessage);
   }
 
-  private getSourceDocument(): vscode.TextDocument | undefined {
+  private async getSourceDocument(): Promise<vscode.TextDocument | undefined> {
+    if (this.sourceDocumentUri) {
+      try {
+        const openedDocument = vscode.workspace.textDocuments.find((document) => {
+          return document.uri.toString() === this.sourceDocumentUri?.toString();
+        }) ?? await vscode.workspace.openTextDocument(this.sourceDocumentUri);
+
+        if (openedDocument.languageId === 'markdown') {
+          return openedDocument;
+        }
+      } catch {
+        return undefined;
+      }
+    }
+
     const activeDocument = vscode.window.activeTextEditor?.document;
 
     if (activeDocument?.languageId === 'markdown') {
@@ -124,13 +156,26 @@ export class MarkuiPreviewPanel {
       return activeDocument;
     }
 
-    if (!this.sourceDocumentUri) {
+    return undefined;
+  }
+
+  private async createMetadata(document: vscode.TextDocument): Promise<PreviewMetadata> {
+    const stat = await this.getDocumentStat(document.uri);
+    const author = extractAuthor(document.getText());
+
+    return {
+      author: author || '미지정',
+      createdAt: stat ? formatDate(stat.ctime) : '-',
+      updatedAt: stat ? formatDate(stat.mtime) : '-'
+    };
+  }
+
+  private async getDocumentStat(uri: vscode.Uri): Promise<vscode.FileStat | undefined> {
+    try {
+      return await vscode.workspace.fs.stat(uri);
+    } catch {
       return undefined;
     }
-
-    return vscode.workspace.textDocuments.find((document) => {
-      return document.languageId === 'markdown' && document.uri.toString() === this.sourceDocumentUri?.toString();
-    });
   }
 
   private createHtml(): string {
@@ -165,6 +210,48 @@ export class MarkuiPreviewPanel {
       this.disposables.pop()?.dispose();
     }
   }
+}
+
+function createEmptyMetadata(): PreviewMetadata {
+  return {
+    author: '미지정',
+    createdAt: '-',
+    updatedAt: '-'
+  };
+}
+
+function extractAuthor(text: string): string {
+  const frontMatter = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+
+  if (!frontMatter) {
+    return '';
+  }
+
+  const authorLine = frontMatter[1].split(/\r?\n/).find((line) => {
+    return /^(author|작성자)\s*:/i.test(line.trim());
+  });
+
+  if (!authorLine) {
+    return '';
+  }
+
+  return authorLine.replace(/^(author|작성자)\s*:/i, '').replace(/^['"]|['"]$/g, '').trim();
+}
+
+function formatDate(timestamp: number): string {
+  return new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'medium'
+  }).format(new Date(timestamp));
+}
+
+function getFileName(fileName: string): string {
+  const normalized = fileName.replace(/\\/g, '/');
+  return normalized.split('/').pop() || fileName;
+}
+
+function getActiveMarkdownDocumentUri(): vscode.Uri | undefined {
+  const activeDocument = vscode.window.activeTextEditor?.document;
+  return activeDocument?.languageId === 'markdown' ? activeDocument.uri : undefined;
 }
 
 function createNonce(): string {
