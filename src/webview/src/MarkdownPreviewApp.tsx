@@ -5,8 +5,10 @@ import Header from '@carbon/react/es/components/UIShell/Header.js';
 import HeaderName from '@carbon/react/es/components/UIShell/HeaderName.js';
 import { Document } from '@carbon/icons-react';
 import { getVscodeApi } from './vscodeApi';
-import { createHeadingId, createMarkdownSectionRenderer } from './markdownRenderer';
+import { createMarkdownSectionRenderer } from './markdownRenderer';
 import type { MarkdownRenderSection } from './markdownRenderer';
+import { buildOutlineTree, createDocumentPage } from './documentPage';
+import type { OutlineItem, OutlineNode } from './documentPage';
 import 'highlight.js/styles/github-dark.css';
 
 type PreviewDocument = {
@@ -26,23 +28,6 @@ type ExtensionMessage =
       type: 'document';
       payload: PreviewDocument;
     };
-
-type DocumentPage = {
-  title: string;
-  lead: string;
-  body: string;
-  outline: OutlineItem[];
-};
-
-type OutlineItem = {
-  id: string;
-  level: number;
-  text: string;
-};
-
-type OutlineNode = OutlineItem & {
-  children: OutlineNode[];
-};
 
 export function MarkdownPreviewApp(): ReactElement {
   const articleRef = useRef<HTMLElement | null>(null);
@@ -271,104 +256,6 @@ function OutlineTreeItem({ isLast, item }: { isLast: boolean; item: OutlineNode 
       ) : null}
     </li>
   );
-}
-
-function createDocumentPage(text: string, fileTitle: string): DocumentPage {
-  const normalizedText = text.trim();
-
-  if (!normalizedText) {
-    return {
-      title: fileTitle,
-      lead: '',
-      body: '',
-      outline: []
-    };
-  }
-
-  const lines = normalizedText.split(/\r?\n/);
-  const titleIndex = lines.findIndex((line) => /^#\s+/.test(line));
-  const title = titleIndex >= 0 ? cleanMarkdownTitle(lines[titleIndex].replace(/^#\s+/, '')) : fileTitle;
-  const contentLines = titleIndex >= 0
-    ? [...lines.slice(0, titleIndex), ...lines.slice(titleIndex + 1)]
-    : lines;
-  const leadIndex = contentLines.findIndex(isPlainParagraph);
-  const lead = leadIndex >= 0 ? cleanMarkdownTitle(contentLines[leadIndex]) : '';
-  const bodyLines = leadIndex >= 0
-    ? [...contentLines.slice(0, leadIndex), ...contentLines.slice(leadIndex + 1)]
-    : contentLines;
-
-  return {
-    title,
-    lead,
-    body: bodyLines.join('\n').trim(),
-    outline: extractOutline(bodyLines)
-  };
-}
-
-function extractOutline(lines: string[]): OutlineItem[] {
-  return lines
-    .map((line, index) => {
-      const heading = line.match(/^(#{2,4})\s+(.+)$/);
-
-      if (!heading) {
-        return undefined;
-      }
-
-      const text = cleanMarkdownTitle(heading[2]);
-
-      return {
-        id: createHeadingId(text, index),
-        level: heading[1].length,
-        text
-      };
-    })
-    .filter((item): item is OutlineItem => Boolean(item));
-}
-
-function buildOutlineTree(items: OutlineItem[]): OutlineNode[] {
-  const roots: OutlineNode[] = [];
-  const stack: OutlineNode[] = [];
-
-  items.forEach((item) => {
-    const node: OutlineNode = {
-      ...item,
-      children: []
-    };
-
-    while (stack.length > 0 && stack[stack.length - 1].level >= node.level) {
-      stack.pop();
-    }
-
-    const parent = stack[stack.length - 1];
-
-    if (parent) {
-      parent.children.push(node);
-    } else {
-      roots.push(node);
-    }
-
-    stack.push(node);
-  });
-
-  return roots;
-}
-
-function isPlainParagraph(line: string): boolean {
-  const trimmed = line.trim();
-
-  return Boolean(
-    trimmed &&
-    !trimmed.startsWith('#') &&
-    !trimmed.startsWith('- ') &&
-    !trimmed.startsWith('* ') &&
-    !trimmed.startsWith('>') &&
-    !trimmed.startsWith('|') &&
-    !trimmed.startsWith('```')
-  );
-}
-
-function cleanMarkdownTitle(value: string): string {
-  return value.replace(/[#*_`~[\]()]/g, '').trim();
 }
 
 function getFileName(fileName: string): string {
