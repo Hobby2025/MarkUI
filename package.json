@@ -6,12 +6,32 @@
   "publisher": "stjoo0925",
   "license": "MIT",
   "icon": "resources/crayon_star_marketplace.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hobby2025/MarkUI.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Hobby2025/MarkUI/issues"
+  },
+  "homepage": "https://github.com/Hobby2025/MarkUI#readme",
   "engines": {
     "vscode": "^1.90.0"
   },
   "categories": [
+    "Visualization",
     "Other"
   ],
+  "keywords": [
+    "markdown",
+    "preview",
+    "webview",
+    "document",
+    "carbon"
+  ],
+  "galleryBanner": {
+    "color": "#0f62fe",
+    "theme": "dark"
+  },
   "activationEvents": [
     "onCommand:markui.openPreview",
     "onLanguage:markdown"

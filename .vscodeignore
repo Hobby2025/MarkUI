@@ -1,0 +1,15 @@
+.gitignore
+.vscode/**
+.code-review-graph/**
+docs/**
+src/**
+tests/**
+node_modules/**
+*.vsix
+*.log
+package-lock.json
+tsconfig.json
+tsconfig.webview.json
+vite.config.ts
+dist/**/*.map
+media/**/*.map
