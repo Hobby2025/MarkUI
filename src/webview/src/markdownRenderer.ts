@@ -4,6 +4,7 @@ import type StateCore from 'markdown-it/lib/rules_core/state_core.mjs';
 import type Token from 'markdown-it/lib/token.mjs';
 import hljs from 'highlight.js/lib/common';
 import footnote from 'markdown-it-footnote';
+import { parseMarkdownDocument } from '../../extension/markdownDocument';
 
 export type MarkdownRenderSection = {
   key: string;
@@ -36,8 +37,10 @@ applyLinkSecurity(markdown.renderer);
 applyCodeCopyRenderer(markdown.renderer);
 
 export function renderMarkdown(source: string): string {
-  return markdown.render(source, {
-    source
+  const normalizedSource = parseMarkdownDocument(source).body;
+
+  return markdown.render(normalizedSource, {
+    source: normalizedSource
   });
 }
 
@@ -51,10 +54,11 @@ export function renderMarkdownSections(
   source: string,
   cache = new Map<string, MarkdownRenderSection>()
 ): MarkdownRenderSection[] {
+  const normalizedSource = parseMarkdownDocument(source).body;
   const env = {
-    source
+    source: normalizedSource
   };
-  const tokens = markdown.parse(source, env);
+  const tokens = markdown.parse(normalizedSource, env);
   const tokenSections = splitTopLevelSections(tokens);
 
   return tokenSections.map((sectionTokens, index) => {
@@ -265,7 +269,7 @@ function applyCodeCopyRenderer(renderer: Renderer): void {
       '<div class="code-copy-wrap">',
       '<button class="code-copy-button" type="button" data-code="',
       encodedSource,
-      '" aria-label="코드 블록 복사">복사</button>',
+      '" aria-label="Copy code block">Copy</button>',
       '<pre><code',
       language ? ` class="language-${escapeHtml(language)}"` : '',
       '>',
@@ -284,7 +288,7 @@ function applyCodeCopyRenderer(renderer: Renderer): void {
       '<div class="code-copy-wrap indented-code-wrap">',
       '<button class="code-copy-button" type="button" data-code="',
       encodedSource,
-      '" aria-label="코드 블록 복사">복사</button>',
+      '" aria-label="Copy code block">Copy</button>',
       '<pre><code>',
       escapeHtml(token.content),
       '</code></pre>',

@@ -29,6 +29,29 @@ assert.match(html, /<br><span class="footnote-continuation">각주 후속 설명
 assert.doesNotMatch(html, /<script>/, '원본 HTML 태그는 실행 가능한 HTML로 렌더링하지 않아야 합니다.');
 assert.match(html, /&lt;script&gt;alert/, '원본 HTML 태그는 이스케이프되어야 합니다.');
 
+const htmlCommentMarkdown = [
+  '<!-- Parent: none root -->',
+  '',
+  '# TerraLink-MxDrawCloudServer',
+  '',
+  'Visible text <!-- inline comment --> remains.',
+  '',
+  '<!-- Generated: 2026-04-15 | Updated: 2026-04-15 -->',
+  '',
+  '```md',
+  '<!-- code comment stays visible -->',
+  '```',
+  '',
+  '    <!-- indented code comment stays visible -->'
+].join('\n');
+const htmlCommentHtml = renderMarkdown(htmlCommentMarkdown);
+
+assert.doesNotMatch(htmlCommentHtml, /Parent: none root/, 'HTML 주석은 일반 문서 본문에서 표시하지 않아야 합니다.');
+assert.doesNotMatch(htmlCommentHtml, /Generated: 2026-04-15/, 'HTML 주석 형식의 문서 메타데이터를 표시하지 않아야 합니다.');
+assert.match(htmlCommentHtml, /Visible text\s+remains\./, '인라인 HTML 주석만 제거하고 일반 문장은 유지해야 합니다.');
+assert.match(htmlCommentHtml, /&lt;!-- code comment stays visible --&gt;/, '코드 블록 내부 HTML 주석은 유지해야 합니다.');
+assert.match(htmlCommentHtml, /&lt;!-- indented code comment stays visible --&gt;/, '들여쓰기 코드 블록 내부 HTML 주석은 유지해야 합니다.');
+
 console.log('Markdown 렌더러 문법 점검 통과');
 const sectionMarkdown = [
   'Intro paragraph.',
@@ -60,3 +83,10 @@ const indentedSectionHtml = indentedSections.map((section) => section.html).join
 
 assert.match(indentedSectionHtml, /data-code="%20%20%20%20const%20value%20%3D%201%3B"/, '섹션 렌더링도 들여쓰기 코드 블록의 원문 공백 4칸을 유지해야 합니다.');
 assert.match(indentedSectionHtml, /<pre><code>const value = 1;\n<\/code><\/pre>/, '섹션 렌더링도 화면에서는 표준 Markdown처럼 공백 4칸을 제거해 표시해야 합니다.');
+
+const commentOnlySectionHtml = renderMarkdownSections('<!-- Parent: none root -->\n\n## Body')
+  .map((section) => section.html)
+  .join('');
+
+assert.doesNotMatch(commentOnlySectionHtml, /Parent: none root/, '섹션 렌더링도 HTML 주석을 표시하지 않아야 합니다.');
+assert.match(commentOnlySectionHtml, /<h2 id="body">Body<\/h2>/, 'HTML 주석 제거 후 제목 섹션을 렌더링해야 합니다.');

@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { parseMarkdownDocument } from './markdownDocument';
+import type { MarkdownMetadataItem } from './markdownDocument';
 
 type PreviewMessage = {
   type: 'document';
@@ -10,9 +12,7 @@ type PreviewMessage = {
 };
 
 type PreviewMetadata = {
-  author: string;
-  createdAt: string;
-  updatedAt: string;
+  items: MarkdownMetadataItem[];
 };
 
 type WebviewMessage =
@@ -86,7 +86,7 @@ export class MarkuiPreviewPanel {
 
     const panel = vscode.window.createWebviewPanel(
       'markuiPreview',
-      'Markdown 미리보기',
+      'Markdown Preview',
       vscode.ViewColumn.Beside,
       {
         enableScripts: true,
@@ -111,11 +111,11 @@ export class MarkuiPreviewPanel {
     const document = await this.getSourceDocument();
 
     if (!document) {
-      this.panel.title = 'Markdown 미리보기';
+      this.panel.title = 'Markdown Preview';
       void this.panel.webview.postMessage({
         type: 'document',
         payload: {
-          fileName: 'Markdown 문서를 열어 주세요',
+          fileName: 'Open a Markdown document',
           metadata: createEmptyMetadata(),
           text: ''
         }
@@ -161,12 +161,23 @@ export class MarkuiPreviewPanel {
 
   private async createMetadata(document: vscode.TextDocument): Promise<PreviewMetadata> {
     const stat = await this.getDocumentStat(document.uri);
-    const author = extractAuthor(document.getText());
+    const items = [...parseMarkdownDocument(document.getText()).metadata];
+
+    if (stat) {
+      items.push({
+        key: 'filecreated',
+        label: 'File created',
+        value: formatDate(stat.ctime)
+      });
+      items.push({
+        key: 'fileupdated',
+        label: 'File updated',
+        value: formatDate(stat.mtime)
+      });
+    }
 
     return {
-      author: author || '미지정',
-      createdAt: stat ? formatDate(stat.ctime) : '-',
-      updatedAt: stat ? formatDate(stat.mtime) : '-'
+      items
     };
   }
 
@@ -185,7 +196,7 @@ export class MarkuiPreviewPanel {
     const nonce = createNonce();
 
     return /* html */ `<!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -194,7 +205,7 @@ export class MarkuiPreviewPanel {
       content="default-src 'none'; img-src ${webview.cspSource} https: data:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}'; font-src ${webview.cspSource};"
     />
     <link rel="stylesheet" href="${styleUri}" />
-    <title>MarkUI 미리보기</title>
+    <title>MarkUI Preview</title>
   </head>
   <body>
     <div id="root"></div>
@@ -214,32 +225,12 @@ export class MarkuiPreviewPanel {
 
 function createEmptyMetadata(): PreviewMetadata {
   return {
-    author: '미지정',
-    createdAt: '-',
-    updatedAt: '-'
+    items: []
   };
 }
 
-function extractAuthor(text: string): string {
-  const frontMatter = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-
-  if (!frontMatter) {
-    return '';
-  }
-
-  const authorLine = frontMatter[1].split(/\r?\n/).find((line) => {
-    return /^(author|작성자)\s*:/i.test(line.trim());
-  });
-
-  if (!authorLine) {
-    return '';
-  }
-
-  return authorLine.replace(/^(author|작성자)\s*:/i, '').replace(/^['"]|['"]$/g, '').trim();
-}
-
 function formatDate(timestamp: number): string {
-  return new Intl.DateTimeFormat('ko-KR', {
+  return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium'
   }).format(new Date(timestamp));
 }

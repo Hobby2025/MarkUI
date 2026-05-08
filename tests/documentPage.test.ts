@@ -42,6 +42,24 @@ assert.equal(mixedPage.lead, '요약 문장입니다.', '코드블록 밖 일반
 assert.equal(mixedPage.outline.length, 1, '코드블록 밖 제목만 목차로 추출해야 합니다.');
 assert.equal(mixedPage.outline[0].text, '실제 목차', '코드블록 내부 제목 후보는 목차에서 제외해야 합니다.');
 
+const htmlCommentPage = createDocumentPage([
+  '# TerraLink-MxDrawCloudServer',
+  '',
+  '<!-- Parent: none root -->',
+  '',
+  '<!-- Generated: 2026-04-15 | Updated: 2026-04-15 -->',
+  '',
+  '## Purpose',
+  '',
+  '본문입니다.'
+].join('\n'), 'AGENTS.md');
+
+assert.equal(htmlCommentPage.title, 'TerraLink-MxDrawCloudServer', 'HTML 주석이 있어도 문서 제목은 유지해야 합니다.');
+assert.equal(htmlCommentPage.lead, '', 'HTML 주석을 문서 리드 문장으로 추출하지 않아야 합니다.');
+assert.doesNotMatch(htmlCommentPage.body, /Parent: none root/, '문서 본문에서도 HTML 주석을 제거해야 합니다.');
+assert.doesNotMatch(htmlCommentPage.body, /Generated: 2026-04-15/, '문서 메타데이터 HTML 주석을 본문에 남기지 않아야 합니다.');
+assert.equal(htmlCommentPage.outline[0].text, 'Purpose', 'HTML 주석 제거 후 실제 제목만 목차에 포함해야 합니다.');
+
 const multiIntroMarkdown = [
   '# Markdown 전체 문법 샘플 데이터',
   '',

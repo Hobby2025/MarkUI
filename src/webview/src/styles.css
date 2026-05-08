@@ -122,6 +122,10 @@ a {
   gap: 18px;
 }
 
+.cds--header .document-metadata--empty {
+  display: none;
+}
+
 .cds--header .document-metadata div {
   display: flex;
   min-width: 0;
@@ -144,28 +148,101 @@ a {
   max-width: 140px;
 }
 
+.cds--header .document-metadata-more {
+  position: relative;
+  display: flex;
+}
+
+.cds--header .document-metadata-more > dt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.cds--header .document-metadata-more > dd {
+  margin: 0;
+  max-width: none;
+}
+
+.cds--header .document-metadata-more summary {
+  display: inline-flex;
+  width: 28px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--surface-card);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  list-style: none;
+}
+
+.cds--header .document-metadata-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.cds--header .document-metadata-more details[open] summary {
+  border-color: var(--primary-line);
+  color: var(--primary-active);
+}
+
+.cds--header .document-metadata-more dl {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(420px, calc(100vh - var(--header-height) - 32px));
+  margin: 0;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--surface-card);
+  box-shadow: 0 16px 42px rgba(20, 20, 19, 0.14);
+  gap: 8px;
+}
+
+.cds--header .document-metadata-more dl div {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.cds--header .document-metadata-more dl dd {
+  max-width: none;
+}
+
 .cds--tile {
   display: block;
   min-width: 0;
 }
 
 .document-page {
-  width: min(100%, 1680px);
+  width: min(100%, 1760px);
   margin: 0 auto;
   padding: 96px clamp(16px, 3vw, 40px);
   display: grid;
-  grid-template-columns: minmax(170px, 220px) minmax(0, 1080px) minmax(170px, 220px);
-  gap: clamp(28px, 3.5vw, 56px);
+  grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
+  gap: clamp(24px, 3vw, 48px);
   align-items: start;
 }
 
 .document-main {
   grid-column: 2;
+  width: 100%;
+  max-width: 1280px;
   min-width: 0;
 }
 
 .document-page--plain {
-  grid-template-columns: minmax(0, 1080px);
+  grid-template-columns: minmax(0, 1280px);
   justify-content: center;
 }
 
@@ -175,7 +252,7 @@ a {
 
 .document-title-band {
   display: grid;
-  max-width: 1080px;
+  max-width: 1280px;
   gap: 14px;
   margin: 0 0 64px;
 }
@@ -249,7 +326,8 @@ a {
 
 .document-card.cds--tile {
   position: relative;
-  max-width: 1080px;
+  width: 100%;
+  max-width: none;
   margin: 0;
   padding: clamp(28px, 5vw, 56px);
   border: 1px solid var(--hairline);

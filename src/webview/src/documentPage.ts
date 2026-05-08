@@ -1,3 +1,4 @@
+import { parseMarkdownDocument } from '../../extension/markdownDocument';
 import { createHeadingId } from './markdownRenderer';
 
 export type DocumentPage = {
@@ -24,7 +25,8 @@ type LineWithFenceState = {
 };
 
 export function createDocumentPage(text: string, fileTitle: string): DocumentPage {
-  const normalizedText = text.trim();
+  const parsedDocument = parseMarkdownDocument(text);
+  const normalizedText = parsedDocument.body.trim();
 
   if (!normalizedText) {
     return {
@@ -38,7 +40,9 @@ export function createDocumentPage(text: string, fileTitle: string): DocumentPag
   const lines = normalizedText.split(/\r?\n/);
   const lineStates = createLineFenceStates(lines);
   const titleLine = lineStates.find(({ isInsideFence, line }) => !isInsideFence && /^#\s+/.test(line));
-  const title = titleLine ? cleanMarkdownTitle(titleLine.line.replace(/^#\s+/, '')) : fileTitle;
+  const title = titleLine
+    ? cleanMarkdownTitle(titleLine.line.replace(/^#\s+/, ''))
+    : findMetadataTitle(parsedDocument.metadata) || fileTitle;
   const contentLines = titleLine
     ? lines.filter((_, index) => index !== titleLine.index)
     : lines;
@@ -160,4 +164,8 @@ function isPlainParagraph(line: string): boolean {
 
 function cleanMarkdownTitle(value: string): string {
   return value.replace(/[#*_`~[\]()]/g, '').trim();
+}
+
+function findMetadataTitle(metadata: { key: string; value: string }[]): string {
+  return metadata.find((item) => item.key === 'title')?.value ?? '';
 }

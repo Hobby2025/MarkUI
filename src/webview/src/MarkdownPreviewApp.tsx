@@ -11,6 +11,12 @@ import { buildOutlineTree, createDocumentPage } from './documentPage';
 import type { OutlineItem, OutlineNode } from './documentPage';
 import 'highlight.js/styles/github-dark.css';
 
+type PreviewMetadataItem = {
+  key: string;
+  label: string;
+  value: string;
+};
+
 type PreviewDocument = {
   fileName: string;
   metadata: PreviewMetadata;
@@ -18,9 +24,7 @@ type PreviewDocument = {
 };
 
 type PreviewMetadata = {
-  author: string;
-  createdAt: string;
-  updatedAt: string;
+  items: PreviewMetadataItem[];
 };
 
 type ExtensionMessage =
@@ -39,7 +43,7 @@ export function MarkdownPreviewApp(): ReactElement {
     }
 
     return {
-      fileName: 'Markdown 문서를 열어 주세요',
+      fileName: 'Open a Markdown document',
       metadata: createEmptyMetadata(),
       text: ''
     };
@@ -94,9 +98,9 @@ export function MarkdownPreviewApp(): ReactElement {
             text: decodeURIComponent(encodedCode)
           }
         });
-        target.textContent = '복사됨';
+        target.textContent = 'Copied';
         window.setTimeout(() => {
-          target.textContent = '복사';
+          target.textContent = 'Copy';
         }, 1200);
       }
     };
@@ -136,9 +140,9 @@ export function MarkdownPreviewApp(): ReactElement {
 
   return (
     <main className="markui-document-shell">
-      <Header aria-label={`${fileTitle} 미리보기`}>
+      <Header aria-label={`${fileTitle} preview`}>
         <HeaderName href="#markui-document" prefix={fileTitle}>
-          미리보기
+          Preview
         </HeaderName>
         <DocumentMetadata metadata={document.metadata} />
       </Header>
@@ -147,7 +151,7 @@ export function MarkdownPreviewApp(): ReactElement {
         <section
           className={`document-page${page.outline.length > 0 ? '' : ' document-page--plain'}`}
           id="markui-document"
-          aria-label="Markdown 문서 미리보기"
+          aria-label="Markdown document preview"
         >
           {page.outline.length > 0 ? <FloatingOutline items={page.outline} /> : null}
           <div className="document-main">
@@ -184,21 +188,43 @@ const MarkdownSection = memo(function MarkdownSection({ section }: { section: Ma
 });
 
 function DocumentMetadata({ metadata }: { metadata: PreviewMetadata }): ReactElement {
+  const visibleItems = metadata.items.slice(0, 3);
+  const hiddenItems = metadata.items.slice(3);
+
+  if (metadata.items.length === 0) {
+    return <div className="document-metadata document-metadata--empty" aria-hidden="true" />;
+  }
+
   return (
-    <dl className="document-metadata" aria-label="문서 메타데이터">
-      <div>
-        <dt>작성자</dt>
-        <dd>{metadata.author}</dd>
-      </div>
-      <div>
-        <dt>작성일</dt>
-        <dd>{metadata.createdAt}</dd>
-      </div>
-      <div>
-        <dt>수정일</dt>
-        <dd>{metadata.updatedAt}</dd>
-      </div>
+    <dl className="document-metadata" aria-label="Document metadata">
+      {visibleItems.map((item) => (
+        <MetadataItem item={item} key={`${item.key}-${item.value}`} />
+      ))}
+      {hiddenItems.length > 0 ? (
+        <div className="document-metadata-more">
+          <dt>More</dt>
+          <dd>
+            <details>
+              <summary aria-label={`Show ${hiddenItems.length} more metadata items`}>...</summary>
+              <dl>
+                {hiddenItems.map((item) => (
+                  <MetadataItem item={item} key={`${item.key}-${item.value}`} />
+                ))}
+              </dl>
+            </details>
+          </dd>
+        </div>
+      ) : null}
     </dl>
+  );
+}
+
+function MetadataItem({ item }: { item: PreviewMetadataItem }): ReactElement {
+  return (
+    <div>
+      <dt>{item.label}</dt>
+      <dd title={item.value}>{item.value}</dd>
+    </div>
   );
 }
 
@@ -206,8 +232,8 @@ function EmptyState(): ReactElement {
   return (
     <Tile className="markui-empty-state">
       <Document size={44} />
-      <h1>미리 볼 Markdown 문서가 없습니다.</h1>
-      <p>Markdown 파일에서 MarkUI 미리보기를 실행해 주세요.</p>
+      <h1>No Markdown document to preview.</h1>
+      <p>Run MarkUI preview from a Markdown file.</p>
     </Tile>
   );
 }
@@ -216,8 +242,8 @@ function FloatingOutline({ items }: { items: OutlineItem[] }): ReactElement {
   const outlineTree = buildOutlineTree(items);
 
   return (
-    <nav className="floating-outline" aria-label="문서 목차">
-      <strong>목차</strong>
+    <nav className="floating-outline" aria-label="Document outline">
+      <strong>Outline</strong>
       <ol className="outline-tree">
         {outlineTree.map((item, index) => (
           <OutlineTreeItem
@@ -280,19 +306,27 @@ function isPreviewMetadata(value: unknown): value is PreviewMetadata {
   return Boolean(
     value &&
     typeof value === 'object' &&
-    'author' in value &&
-    'createdAt' in value &&
-    'updatedAt' in value &&
-    typeof value.author === 'string' &&
-    typeof value.createdAt === 'string' &&
-    typeof value.updatedAt === 'string'
+    'items' in value &&
+    Array.isArray(value.items) &&
+    value.items.every(isPreviewMetadataItem)
+  );
+}
+
+function isPreviewMetadataItem(value: unknown): value is PreviewMetadataItem {
+  return Boolean(
+    value &&
+    typeof value === 'object' &&
+    'key' in value &&
+    'label' in value &&
+    'value' in value &&
+    typeof value.key === 'string' &&
+    typeof value.label === 'string' &&
+    typeof value.value === 'string'
   );
 }
 
 function createEmptyMetadata(): PreviewMetadata {
   return {
-    author: '미지정',
-    createdAt: '-',
-    updatedAt: '-'
+    items: []
   };
 }

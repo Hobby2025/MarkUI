@@ -1,34 +1,48 @@
 # MarkUI
 
-MarkUI는 VS Code에서 Markdown 문서를 React 기반 컴포넌트형 미리보기로 보여주는 확장 프로그램입니다.
+MarkUI is a VS Code extension that presents Markdown documents in a React-powered, component-style preview.
 
-## 주요 기능
+## Features
 
-- Markdown 문서를 웹 문서처럼 넓고 정돈된 캔버스로 미리봅니다.
-- 문서 제목, 목차, 메타데이터를 자동으로 구성합니다.
-- 코드 블록 복사, 코드 하이라이트, 표, 작업 목록, 각주를 지원합니다.
-- Webview 보안을 위해 원본 HTML은 실행하지 않고 안전하게 이스케이프합니다.
+- Preview Markdown documents on a wide, structured canvas that feels closer to a web document.
+- Build the document title, outline, and metadata automatically.
+- Support code copy buttons, syntax highlighting, tables, task lists, and footnotes.
+- Escape raw HTML instead of executing it in the Webview.
 
-## 사용 방법
+## Usage
 
-1. VS Code에서 Markdown 파일을 엽니다.
-2. 에디터 우측 상단의 MarkUI 아이콘을 누르거나 명령 팔레트에서 `Markdown 미리보기 열기`를 실행합니다.
-3. 열린 미리보기 탭에서 문서를 확인합니다.
+1. Open a Markdown file in VS Code.
+2. Select the MarkUI icon in the editor title bar, or run `Open Markdown Preview` from the Command Palette.
+3. Review the document in the preview tab.
 
-## 지원 문법
+## Supported Syntax
 
-MarkUI는 `markdown-it` 기반 렌더링 파이프라인을 사용합니다.
+MarkUI uses a `markdown-it` based rendering pipeline.
 
-- 제목, 문단, 인용문, 목록, 링크, 이미지, 코드, 수평선
-- 표, 취소선, 작업 목록, 각주
-- fenced code block과 들여쓰기 code block
-- 자동 링크
+- CommonMark basics: headings, paragraphs, blockquotes, lists, links, images, code, and horizontal rules
+- GitHub Flavored Markdown-style syntax: tables, strikethrough, task lists, and autolinks
+- MarkUI extensions: footnotes, code block copy buttons, heading IDs, and an outline
+- Code blocks: fenced code blocks and indented code blocks
 
-## 보안
+HTML tags are displayed as text instead of executable HTML. HTML-based extensions such as `<details>` and `<kbd>` are escaped the same way.
 
-VS Code Webview에서 안전하게 동작하도록 원본 HTML은 실행 가능한 HTML로 렌더링하지 않습니다. Markdown 안의 HTML 태그는 텍스트로 이스케이프됩니다.
+## Writing Guidelines
 
-## 개발
+- Use a single `#` heading per document.
+- Use `##` for main sections, `###` for subsections, and `####` only when needed.
+- Increase heading levels one step at a time.
+- Write link text that describes the destination.
+- Include meaningful alternative text for images.
+- Use tables only for real tabular data, and introduce each table with a short summary sentence.
+- Prefer fenced code blocks and specify the language when possible.
+
+See `docs/markdown-style-guide.md` for the full writing guide.
+
+## Security
+
+Raw HTML is not rendered as executable HTML in the VS Code Webview. HTML tags inside Markdown are escaped as text.
+
+## Development
 
 ```powershell
 npm install
@@ -37,4 +51,4 @@ npm run check
 npm run build
 ```
 
-VS Code에서 이 폴더를 열고 `F5`로 확장 개발 호스트를 실행한 뒤, Markdown 파일에서 `MarkUI: Markdown 미리보기 열기` 명령을 실행합니다.
+Open this folder in VS Code, press `F5` to launch the Extension Development Host, then run `MarkUI: Open Markdown Preview` from a Markdown file.

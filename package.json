@@ -1,8 +1,8 @@
 {
   "name": "markui",
   "displayName": "MarkUI",
-  "description": "React 기반 컴포넌트형 Markdown 미리보기 VS Code 확장 프로그램입니다.",
-  "version": "1.0.2",
+  "description": "A React-powered component-style Markdown preview extension for VS Code.",
+  "version": "1.0.3",
   "publisher": "stjoo0925",
   "license": "MIT",
   "icon": "resources/crayon_star_marketplace.png",
@@ -41,7 +41,7 @@
     "commands": [
       {
         "command": "markui.openPreview",
-        "title": "Markdown 미리보기 열기",
+        "title": "Open Markdown Preview",
         "category": "MarkUI",
         "icon": {
           "light": "resources/crayon_star_ide.svg",
@@ -60,7 +60,7 @@
     }
   },
   "scripts": {
-    "test": "tsx tests/markdownRenderer.test.ts && tsx tests/documentPage.test.ts && tsx tests/previewPanelConnection.test.ts",
+    "test": "tsx tests/markdownDocument.test.ts && tsx tests/markdownRenderer.test.ts && tsx tests/documentPage.test.ts && tsx tests/previewPanelConnection.test.ts",
     "check": "npm test && tsc --noEmit && tsc -p tsconfig.webview.json --noEmit && vite build",
     "build": "tsc -p . && tsc -p tsconfig.webview.json --noEmit && vite build",
     "watch": "tsc -w -p .",
