@@ -2,7 +2,7 @@
   "name": "markui",
   "displayName": "MarkUI",
   "description": "A React-powered component-style Markdown preview extension for VS Code.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "publisher": "stjoo0925",
   "license": "MIT",
   "icon": "resources/crayon_star_marketplace.png",
