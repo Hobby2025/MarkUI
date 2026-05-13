@@ -117,21 +117,26 @@ export function MarkdownPreviewApp(): ReactElement {
       return;
     }
 
-    const sections = Array.from(
-      window.document.querySelectorAll<HTMLElement>('.markdown-render-section[data-heading-id]')
-    );
+    const headings = page.outline
+      .map((item) => window.document.getElementById(item.id))
+      .filter((heading): heading is HTMLElement => Boolean(heading));
 
-    if (sections.length === 0) {
+    if (headings.length === 0) {
       setActiveHeadingId(null);
       return;
     }
 
     const updateActiveHeading = () => {
-      const scrollAnchor = getScrollAnchorOffset();
-      const activeSection = [...sections].reverse().find((section) => {
-        return section.getBoundingClientRect().top <= scrollAnchor;
-      }) ?? sections[0];
-      setActiveHeadingId(activeSection.dataset.headingId ?? null);
+      if (isScrolledNearDocumentBottom()) {
+        setActiveHeadingId(headings[headings.length - 1].id || null);
+        return;
+      }
+
+      const trackingLine = getHeadingTrackingLine();
+      const activeHeading = [...headings].reverse().find((heading) => {
+        return heading.getBoundingClientRect().top <= trackingLine;
+      }) ?? headings[0];
+      setActiveHeadingId(activeHeading.id || null);
     };
 
     updateActiveHeading();
@@ -148,11 +153,11 @@ export function MarkdownPreviewApp(): ReactElement {
 
     const observer = new IntersectionObserver(updateActiveHeading, {
       root: null,
-      rootMargin: `-${getScrollAnchorOffset()}px 0px -60% 0px`,
+      rootMargin: `-${getHeaderOffset()}px 0px -55% 0px`,
       threshold: [0, 1]
     });
 
-    sections.forEach((section) => observer.observe(section));
+    headings.forEach((heading) => observer.observe(heading));
     window.addEventListener('scroll', updateActiveHeading, { passive: true });
 
     return () => {
@@ -493,8 +498,19 @@ function scrollOutlineToActiveLink(activeHeadingId: string): void {
   }
 }
 
-function getScrollAnchorOffset(): number {
+function getHeaderOffset(): number {
   const headerHeight = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height'));
 
   return (Number.isFinite(headerHeight) ? headerHeight : 64) + 48;
+}
+
+function getHeadingTrackingLine(): number {
+  return Math.max(getHeaderOffset(), window.innerHeight * 0.34);
+}
+
+function isScrolledNearDocumentBottom(): boolean {
+  const scrollingElement = document.scrollingElement ?? document.documentElement;
+  const remainingDistance = scrollingElement.scrollHeight - scrollingElement.clientHeight - scrollingElement.scrollTop;
+
+  return remainingDistance <= 8;
 }

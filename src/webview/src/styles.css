@@ -126,11 +126,13 @@ a {
 .cds--header .document-metadata {
   display: flex;
   min-width: 0;
+  height: 36px;
+  align-items: center;
   margin: 0 0 0 auto;
   padding: 0 12px 0 16px;
   border-top: 0;
   color: var(--muted);
-  gap: 18px;
+  gap: 14px;
 }
 
 .cds--header .document-metadata--empty {
@@ -140,8 +142,9 @@ a {
 .cds--header .document-metadata div {
   display: flex;
   min-width: 0;
+  height: 100%;
   gap: 6px;
-  align-items: baseline;
+  align-items: center;
 }
 
 .cds--header .document-metadata dt,
@@ -162,6 +165,9 @@ a {
 .cds--header .document-metadata-more {
   position: relative;
   display: flex;
+  flex: 0 0 auto;
+  height: 100%;
+  align-items: center;
 }
 
 .cds--header .document-metadata-more > dt {
@@ -173,13 +179,22 @@ a {
 }
 
 .cds--header .document-metadata-more > dd {
+  display: flex;
+  height: 100%;
+  align-items: center;
   margin: 0;
   max-width: none;
 }
 
+.cds--header .document-metadata-more details {
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
 .cds--header .document-metadata-more summary {
   display: inline-flex;
-  width: 28px;
+  width: 30px;
   height: 24px;
   align-items: center;
   justify-content: center;
