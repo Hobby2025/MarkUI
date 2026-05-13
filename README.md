@@ -6,8 +6,16 @@ MarkUI is a VS Code extension that presents Markdown documents in a React-powere
 
 - Preview Markdown documents on a wide, structured canvas that feels closer to a web document.
 - Build the document title, outline, and metadata automatically.
+- Highlight the active outline item while scrolling and provide a TOP button for long documents.
+- Follow the active VS Code color theme inside the preview Webview.
 - Support code copy buttons, syntax highlighting, tables, task lists, and footnotes.
 - Escape raw HTML instead of executing it in the Webview.
+
+## What's New in 1.1.0
+
+- The preview now follows the active VS Code color theme.
+- The outline highlights the section currently visible in the document.
+- A polished floating TOP button helps jump back to the beginning of long previews.
 
 ## Usage
 

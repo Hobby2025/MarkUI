@@ -46,6 +46,7 @@ assert.match(styles, /@import "highlight\.js\/styles\/github-dark\.css";/, 'High
 assert.match(styles, /print-color-adjust: exact/, '인쇄 시 브라우저가 배경색과 연한 색상을 임의로 생략하지 않도록 지시해야 합니다.');
 assert.match(styles, /-webkit-print-color-adjust: exact/, 'Chromium 계열 인쇄에서도 배경색과 코드블럭 색상을 보존해야 합니다.');
 assert.match(styles, /@media print[\s\S]*\.floating-outline[\s\S]*display: none !important/, '인쇄 시 목차는 숨겨야 합니다.');
+assert.match(styles, /@media print[\s\S]*\.markui-top-button[\s\S]*display: none !important/, '인쇄 시 TOP 버튼은 숨겨야 합니다.');
 assert.match(styles, /@media print[\s\S]*\.markdown-document thead[\s\S]*display: table-header-group/, '인쇄 시 표 헤더 구조를 유지해야 합니다.');
 assert.match(styles, /@media print[\s\S]*\.markdown-document tr[\s\S]*break-inside: avoid/, '인쇄 시 표 행이 어색하게 분리되지 않아야 합니다.');
 assert.doesNotMatch(styles, /@media print[\s\S]*\.document-card\.cds--tile[\s\S]*border: 0/, '인쇄 스타일은 문서 카드 스타일을 제거하지 않아야 합니다.');

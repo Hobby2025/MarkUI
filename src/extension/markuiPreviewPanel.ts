@@ -82,7 +82,6 @@ export class MarkuiPreviewPanel {
         this.updateDocument();
       }
     }, null, this.disposables);
-
     this.panel.webview.html = this.createHtml();
     this.updateDocument();
   }

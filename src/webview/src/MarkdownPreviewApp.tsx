@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { Tile } from '@carbon/react/es/components/Tile/Tile.js';
 import Header from '@carbon/react/es/components/UIShell/Header.js';
 import HeaderName from '@carbon/react/es/components/UIShell/HeaderName.js';
-import { Document, Download } from '@carbon/icons-react';
+import { ArrowUp, Document, Download } from '@carbon/icons-react';
 import { getVscodeApi } from './vscodeApi';
 import { createMarkdownSectionRenderer } from './markdownRenderer';
 import type { MarkdownRenderSection } from './markdownRenderer';
@@ -34,6 +34,8 @@ type ExtensionMessage =
 
 export function MarkdownPreviewApp(): ReactElement {
   const articleRef = useRef<HTMLElement | null>(null);
+  const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
+  const [isTopButtonVisible, setIsTopButtonVisible] = useState(false);
   const [document, setDocument] = useState<PreviewDocument>(() => {
     const savedState = getVscodeApi()?.getState();
 
@@ -56,6 +58,12 @@ export function MarkdownPreviewApp(): ReactElement {
     [page.body, renderMarkdownSections]
   );
   const hasDocument = document.text.trim().length > 0;
+  const scrollToTop = useCallback(() => {
+    const scrollingElement = window.document.scrollingElement ?? window.document.documentElement;
+
+    scrollingElement.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const requestPrintableDocument = useCallback(() => {
     const documentPage = window.document.querySelector<HTMLElement>('.document-page');
 
@@ -76,6 +84,17 @@ export function MarkdownPreviewApp(): ReactElement {
   }, [document.fileName, hasDocument]);
 
   useEffect(() => {
+    const handleScroll = () => {
+      setIsTopButtonVisible(window.scrollY > 360);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
     const vscodeApi = getVscodeApi();
     const handleMessage = (event: MessageEvent<ExtensionMessage>) => {
       if (event.data.type !== 'document') {
@@ -91,6 +110,64 @@ export function MarkdownPreviewApp(): ReactElement {
 
     return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  useEffect(() => {
+    if (!hasDocument || page.outline.length === 0) {
+      setActiveHeadingId(null);
+      return;
+    }
+
+    const sections = Array.from(
+      window.document.querySelectorAll<HTMLElement>('.markdown-render-section[data-heading-id]')
+    );
+
+    if (sections.length === 0) {
+      setActiveHeadingId(null);
+      return;
+    }
+
+    const updateActiveHeading = () => {
+      const scrollAnchor = getScrollAnchorOffset();
+      const activeSection = [...sections].reverse().find((section) => {
+        return section.getBoundingClientRect().top <= scrollAnchor;
+      }) ?? sections[0];
+      setActiveHeadingId(activeSection.dataset.headingId ?? null);
+    };
+
+    updateActiveHeading();
+
+    if (typeof window.IntersectionObserver === 'undefined') {
+      window.addEventListener('scroll', updateActiveHeading, { passive: true });
+      window.addEventListener('resize', updateActiveHeading);
+
+      return () => {
+        window.removeEventListener('scroll', updateActiveHeading);
+        window.removeEventListener('resize', updateActiveHeading);
+      };
+    }
+
+    const observer = new IntersectionObserver(updateActiveHeading, {
+      root: null,
+      rootMargin: `-${getScrollAnchorOffset()}px 0px -60% 0px`,
+      threshold: [0, 1]
+    });
+
+    sections.forEach((section) => observer.observe(section));
+    window.addEventListener('scroll', updateActiveHeading, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', updateActiveHeading);
+    };
+  }, [hasDocument, page.outline.length, renderedMarkdownSections]);
+
+  useEffect(() => {
+    if (!activeHeadingId) {
+      return;
+    }
+
+    scrollOutlineToActiveLink(activeHeadingId);
+  }, [activeHeadingId]);
 
   useEffect(() => {
     const article = articleRef.current;
@@ -181,7 +258,7 @@ export function MarkdownPreviewApp(): ReactElement {
           id="markui-document"
           aria-label="Markdown document preview"
         >
-          {page.outline.length > 0 ? <FloatingOutline items={page.outline} /> : null}
+          {page.outline.length > 0 ? <FloatingOutline activeHeadingId={activeHeadingId} items={page.outline} /> : null}
           <div className="document-main">
             <header className="document-title-band">
               <p>Markdown document</p>
@@ -201,6 +278,18 @@ export function MarkdownPreviewApp(): ReactElement {
       ) : (
         <EmptyState />
       )}
+      {hasDocument ? (
+        <button
+          aria-label="문서 최상단으로 이동"
+          className={`markui-top-button${isTopButtonVisible ? ' markui-top-button--visible' : ''}`}
+          onClick={scrollToTop}
+          title="맨 위로"
+          type="button"
+        >
+          <ArrowUp size={20} />
+          <span>TOP</span>
+        </button>
+      ) : null}
     </main>
   );
 }
@@ -266,7 +355,7 @@ function EmptyState(): ReactElement {
   );
 }
 
-function FloatingOutline({ items }: { items: OutlineItem[] }): ReactElement {
+function FloatingOutline({ activeHeadingId, items }: { activeHeadingId: string | null; items: OutlineItem[] }): ReactElement {
   const outlineTree = buildOutlineTree(items);
 
   return (
@@ -275,6 +364,7 @@ function FloatingOutline({ items }: { items: OutlineItem[] }): ReactElement {
       <ol className="outline-tree">
         {outlineTree.map((item, index) => (
           <OutlineTreeItem
+            activeHeadingId={activeHeadingId}
             isLast={index === outlineTree.length - 1}
             item={item}
             key={`${item.id}-${item.level}`}
@@ -285,7 +375,17 @@ function FloatingOutline({ items }: { items: OutlineItem[] }): ReactElement {
   );
 }
 
-function OutlineTreeItem({ isLast, item }: { isLast: boolean; item: OutlineNode }): ReactElement {
+function OutlineTreeItem({
+  activeHeadingId,
+  isLast,
+  item
+}: {
+  activeHeadingId: string | null;
+  isLast: boolean;
+  item: OutlineNode;
+}): ReactElement {
+  const isActive = item.id === activeHeadingId;
+
   return (
     <li
       className={[
@@ -294,13 +394,23 @@ function OutlineTreeItem({ isLast, item }: { isLast: boolean; item: OutlineNode 
         isLast ? 'outline-tree-item--last' : ''
       ].filter(Boolean).join(' ')}
     >
-      <a href={`#${item.id}`} className={`outline-link outline-link--level-${item.level}`}>
+      <a
+        aria-current={isActive ? 'location' : undefined}
+        className={[
+          'outline-link',
+          `outline-link--level-${item.level}`,
+          isActive ? 'outline-link--active' : ''
+        ].filter(Boolean).join(' ')}
+        data-heading-id={item.id}
+        href={`#${item.id}`}
+      >
         <span className="outline-link-text">{item.text}</span>
       </a>
       {item.children.length > 0 ? (
         <ol className="outline-tree outline-tree--nested">
           {item.children.map((child, index) => (
             <OutlineTreeItem
+              activeHeadingId={activeHeadingId}
               isLast={index === item.children.length - 1}
               item={child}
               key={`${child.id}-${child.level}`}
@@ -357,4 +467,34 @@ function createEmptyMetadata(): PreviewMetadata {
   return {
     items: []
   };
+}
+
+function scrollOutlineToActiveLink(activeHeadingId: string): void {
+  const activeLink = Array.from(window.document.querySelectorAll<HTMLAnchorElement>('.floating-outline .outline-link'))
+    .find((link) => link.dataset.headingId === activeHeadingId);
+  const outline = activeLink?.closest<HTMLElement>('.floating-outline');
+
+  if (!activeLink || !outline) {
+    return;
+  }
+
+  const linkTop = activeLink.offsetTop;
+  const linkBottom = linkTop + activeLink.offsetHeight;
+  const visibleTop = outline.scrollTop;
+  const visibleBottom = visibleTop + outline.clientHeight;
+
+  if (linkTop < visibleTop) {
+    outline.scrollTop = linkTop;
+    return;
+  }
+
+  if (linkBottom > visibleBottom) {
+    outline.scrollTop = linkBottom - outline.clientHeight;
+  }
+}
+
+function getScrollAnchorOffset(): number {
+  const headerHeight = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height'));
+
+  return (Number.isFinite(headerHeight) ? headerHeight : 64) + 48;
 }
